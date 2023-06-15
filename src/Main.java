@@ -7,12 +7,12 @@ public class Main {
     public static void main(String[] args) throws IOException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         int n = Integer.parseInt(reader.readLine());
-        Set<String> blackList = new HashSet<>();
-        Map<String, Map<String, Integer>> result = new HashMap<>();
+        Set<String> blackList = new HashSet<>(n);
         for (int i = 0; i < n; i++) {
             blackList.add(reader.readLine());
         }
         int m = Integer.parseInt(reader.readLine());
+        List<MyFile> allFiles = new ArrayList<>(m / 2);
         for (int i = 0; i < m; i++) {
             String fullName = reader.readLine();
             boolean inBlackList = false;
@@ -25,40 +25,75 @@ public class Main {
             if (!inBlackList) {
                 continue;
             }
-            String ext = fullName.substring(fullName.lastIndexOf('.'));
-            List<String> allFolders = new ArrayList<>();
-            int index = fullName.lastIndexOf("/");
-            while (index != -1) {
-                fullName = fullName.substring(0, index + 1);
-                allFolders.add(fullName);
-                index = fullName.lastIndexOf("/", fullName.length() - 2);
-            }
-            for (String path: allFolders) {
-                Map<String, Integer> extensions = result.get(path);
-                if (extensions == null) {
-                    extensions = new HashMap<>();
-                    extensions.put(ext, 1);
-                } else {
-                    Integer count = extensions.get(ext);
-                    count = (count == null) ? 1 : count + 1;
-                    extensions.put(ext, count);
-                }
-                result.put(path, extensions);
-            }
+            String ext = fullName.substring(fullName.lastIndexOf('.')).intern();
+            MyFile my = new MyFile();
+            my.setExt(ext);
+            my.setName(fullName);
+            allFiles.add(my);
         }
         int q = Integer.parseInt(reader.readLine());
+        StringBuilder sb = new StringBuilder();
         for (int i = 0; i < q; i++) {
             String path = reader.readLine();
-            Map<String, Integer> ext = result.get(path);
-            if (ext == null){
-                System.out.println(0);
-                continue;
+            boolean found = false;
+            Map<String, Integer> extMap = new HashMap<>(10);
+            for (MyFile my : allFiles) {
+                if (my.getName().length() < path.length()) {
+                    continue;
+                }
+                if (my.getName().substring(0, path.length()).equals(path)) {
+                    String ext = my.getExt();
+                    Integer count = extMap.get(ext);
+                    count = (count == null) ? 1 : count + 1;
+                    extMap.put(ext, count);
+                    found = true;
+                }
             }
-            System.out.println(ext.size());
-            for (Map.Entry<String, Integer> entryExt : ext.entrySet()) {
-                System.out.println(entryExt.getKey() + ": " + entryExt.getValue());
+            if (!found) {
+                sb.append(0);
+                sb.append("\n");
+            } else {
+                sb.append(extMap.size());
+                sb.append("\n");
+                for (Map.Entry<String, Integer> entryExt : extMap.entrySet()) {
+                    sb.append(entryExt.getKey() + ": " + entryExt.getValue());
+                    sb.append("\n");
+                }
             }
         }
+        System.out.println(sb.toString());
         reader.close();
+    }
+}
+class MyFile {
+    private String root = "/";
+    private String name = "";
+    private String ext = "";
+
+    public MyFile() {
+    }
+
+    public String getRoot() {
+        return root;
+    }
+
+    public void setRoot(String root) {
+        this.root = root;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getExt() {
+        return ext;
+    }
+
+    public void setExt(String ext) {
+        this.ext = ext;
     }
 }
